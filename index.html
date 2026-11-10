@@ -1,0 +1,1066 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Operación Destrabe</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;700&family=Hanken+Grotesk:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#F1F4F4;--surface:#FFFFFF;--ink:#0F1B1D;--muted:#566669;--line:#D3DBDB;--soft:#E7EDED;--lv-nac:#0F766E;--lv-dep:#B45309;--lv-mun:#2563EB;--lv-pri:#BE185D;
+  --f-display:'Bricolage Grotesque','Segoe UI',system-ui,sans-serif;
+  --f-body:'Hanken Grotesk','Segoe UI',system-ui,sans-serif;
+  --f-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){ --bg:#0C1416;--surface:#121D20;--ink:#E8F0F0;--muted:#93A5A8;--line:#243438;--soft:#1A2A2D;--lv-nac:#2DD4BF;--lv-dep:#F5A524;--lv-mun:#7FB0FF;--lv-pri:#F472B6; color-scheme:dark; }
+}
+:root[data-theme="dark"]{ --bg:#0C1416;--surface:#121D20;--ink:#E8F0F0;--muted:#93A5A8;--line:#243438;--soft:#1A2A2D;--lv-nac:#2DD4BF;--lv-dep:#F5A524;--lv-mun:#7FB0FF;--lv-pri:#F472B6; color-scheme:dark; }
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:var(--bg); color:var(--ink); font-family:var(--f-body); font-size:15px; line-height:1.5;
+  padding-block:36px 48px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+}
+.wrap{max-width:1120px;margin:0 auto}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--ink);outline-offset:3px;border-radius:6px}
+[hidden]{display:none!important}
+
+header h1{font-family:var(--f-display);font-weight:700;font-size:clamp(28px,4.4vw,40px);letter-spacing:-.025em;line-height:1.08;margin:0 0 10px;text-wrap:balance}
+header p{margin:0;color:var(--muted);max-width:62ch}
+
+/* Marco: escalones que contienen la ruta */
+.marco{--paso:clamp(20px,4.2vw,48px);list-style:none;margin:28px 0 0;padding:0;display:flex;flex-direction:column;gap:10px}
+.esc{position:relative;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,auto);align-items:center;gap:12px 28px;
+  background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 18px;margin-left:calc(var(--i) * var(--paso))}
+.esc:not(:first-child)::before{content:"";position:absolute;left:calc(var(--paso) * -1 + 10px);top:-11px;
+  width:calc(var(--paso) - 10px);height:calc(50% + 11px);border-left:2px solid var(--line);border-bottom:2px solid var(--line);border-bottom-left-radius:8px;pointer-events:none}
+.esc .cap{font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.esc .mt{font-family:var(--f-display);font-weight:600;font-size:clamp(17px,2.2vw,20px);letter-spacing:-.015em;line-height:1.2;margin:3px 0 4px;text-wrap:balance}
+.esc .tx{margin:0;font-size:13.5px;color:var(--muted);max-width:60ch}
+.esc .et{min-width:0}
+.lidera{display:flex;flex-direction:column;gap:6px;align-items:flex-start;min-width:0}
+.whos{display:flex;flex-wrap:wrap;gap:6px}
+.who{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:3px 11px;font-size:13px}
+.esc.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.esc.on .cap,.esc.on .tx{color:inherit;opacity:.75}
+.esc.on .go{color:var(--bg);text-decoration:none;border:1px solid currentColor;border-radius:999px;padding:6px 14px;font-size:13.5px;white-space:nowrap;display:inline-block}
+.esc.on .go:hover{background:var(--bg);color:var(--ink)}
+.esc .cnt{display:block;font-family:var(--f-mono);font-size:11.5px;opacity:.75;margin-bottom:8px}
+.ruta{margin-top:clamp(44px,7vw,72px);scroll-margin-top:16px}
+.sec-head h2{font-family:var(--f-display);font-weight:700;font-size:clamp(26px,3.8vw,34px);letter-spacing:-.025em;line-height:1.1;margin:0 0 8px;text-wrap:balance}
+.sec-head #intro{margin:0;color:var(--muted);max-width:62ch}
+
+.route{display:grid;grid-template-columns:repeat(var(--n-etapas,6),minmax(0,1fr));margin-top:34px}
+.step{position:relative;display:flex;flex-direction:column;gap:12px;text-align:left;background:none;border:0;padding:0 14px 0 0;cursor:pointer;min-width:0}
+.step .num{
+  width:36px;height:36px;border-radius:50%;border:2px solid var(--line);background:var(--bg);
+  display:grid;place-items:center;font-family:var(--f-mono);font-size:13px;position:relative;z-index:1;
+  transition:background .2s,border-color .2s,color .2s;
+}
+.step::after{content:"";position:absolute;top:17px;left:36px;right:0;height:2px;background:var(--line);transition:background .2s}
+.step:last-child::after{display:none}
+.step.done::after{background:var(--ink)}
+.step.done .num{border-color:var(--ink)}
+.step[aria-selected="true"] .num{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.step:hover .num{border-color:var(--ink)}
+.step .txt{display:flex;flex-direction:column;gap:2px;min-width:0}
+.step .lbl{font-weight:600;font-size:14px;line-height:1.25;color:var(--muted);transition:color .2s}
+.step[aria-selected="true"] .lbl,.step:hover .lbl{color:var(--ink)}
+.step .sub{font-family:var(--f-mono);font-size:11.5px;color:var(--muted)}
+
+.toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin:30px 0 14px}
+.toolbar .cap{font-family:var(--f-mono);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;font-size:13px;cursor:pointer;transition:background .15s,border-color .15s}
+.chip:hover{border-color:var(--ink)}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.status{margin-left:auto;font-family:var(--f-mono);font-size:11.5px;color:var(--muted)}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--c,var(--muted));flex:none}
+.chip[aria-pressed="true"] .dot{box-shadow:0 0 0 2px var(--bg)}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:clamp(20px,3.2vw,32px)}
+.cols{display:grid;grid-template-columns:minmax(0,.86fr) minmax(0,1.14fr);gap:clamp(24px,4vw,44px)}
+.eyebrow{font-family:var(--f-mono);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.panel .stage{font-family:var(--f-display);font-weight:700;font-size:clamp(24px,3.2vw,30px);letter-spacing:-.02em;line-height:1.12;margin:0 0 10px;text-wrap:balance}
+.lead{margin:0 0 22px;color:var(--muted);max-width:52ch}
+.stat{border-block:1px solid var(--line);padding:16px 0;margin-bottom:22px}
+.stat .big{font-family:var(--f-display);font-weight:700;font-size:clamp(30px,4vw,40px);letter-spacing:-.025em;line-height:1.05;font-variant-numeric:tabular-nums}
+.stat p{margin:8px 0 0;font-size:14px;color:var(--muted)}
+.stat .src{display:block;margin-top:8px;font-family:var(--f-mono);font-size:11px;color:var(--muted)}
+.h3{font-family:var(--f-mono);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+.tram{list-style:none;margin:0;padding:0}
+.tram li{padding:11px 0;border-top:1px solid var(--line);transition:opacity .2s}
+.tram li:first-child{border-top:0}
+.tram .t{font-weight:500}
+.tram .w{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;margin-top:3px;font-size:12.5px;color:var(--muted)}
+.tram .w span{display:inline-flex;align-items:center;gap:6px}
+
+.ents{display:grid;grid-template-columns:repeat(auto-fill,minmax(225px,1fr));gap:12px}
+.card{border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:8px;min-width:0;transition:opacity .2s,border-color .2s}
+.card:hover{border-color:var(--ink)}
+.card .n{font-weight:600;line-height:1.25}
+.card .m{display:flex;flex-wrap:wrap;align-items:center;gap:2px 8px;font-size:12px;color:var(--muted)}
+.card .m span{display:inline-flex;align-items:center;gap:6px}
+.card .f{margin:0;font-size:13.5px;line-height:1.45}
+.also{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:auto;padding-top:4px;font-family:var(--f-mono);font-size:11px;color:var(--muted)}
+.also button{width:24px;height:24px;border-radius:50%;border:1px solid var(--line);background:transparent;cursor:pointer;font-family:var(--f-mono);font-size:11px;display:grid;place-items:center;padding:0}
+.also button:hover{border-color:var(--ink);background:var(--ink);color:var(--bg)}
+.dim{opacity:.28}
+
+.nav{display:flex;justify-content:space-between;gap:12px;margin-top:26px;padding-top:18px;border-top:1px solid var(--line)}
+.nav button{background:none;border:1px solid var(--line);border-radius:999px;padding:8px 16px;cursor:pointer;font-size:13.5px;transition:border-color .15s;text-align:left}
+.nav button:hover{border-color:var(--ink)}
+.nav button[disabled]{visibility:hidden}
+
+.trans{margin-top:36px}
+.trans h3{font-family:var(--f-display);font-size:20px;letter-spacing:-.015em;margin:0 0 4px}
+.trans > p{margin:0 0 16px;color:var(--muted);max-width:62ch}
+.tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(235px,1fr));gap:12px}
+.tgrid .card{background:var(--surface)}
+
+.foot{margin-top:30px;font-size:12.5px;color:var(--muted);max-width:90ch}
+.foot p{margin:0 0 6px}
+
+@media (max-width:900px){.cols{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:760px){
+  .route{grid-template-columns:minmax(0,1fr);margin-top:26px}
+  .step{flex-direction:row;align-items:center;gap:14px;padding:0 0 12px}
+  .step .num{width:32px;height:32px}
+  .step::after{top:34px;bottom:0;left:15px;right:auto;width:2px;height:auto}
+  .step .txt{flex-direction:row;align-items:baseline;gap:10px;flex-wrap:wrap}
+  .status{margin-left:0;width:100%}
+  .esc{grid-template-columns:minmax(0,1fr);padding:12px 14px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header>
+    <h1>Operación Destrabe</h1>
+    <p>Marco de estrategias de simplificación de trámites. Esta página desarrolla el componente productivo: la ruta que recorre una empresa en Colombia.</p>
+  </header>
+
+  <ul class="marco" id="marco"></ul>
+
+  <section class="ruta" id="ruta" aria-labelledby="ruta-h">
+    <div class="sec-head">
+      <p class="eyebrow">Componente productivo</p>
+      <h2 id="ruta-h">Ruta de la empresa en Colombia</h2>
+      <p id="intro"></p>
+    </div>
+
+    <div class="route" id="route" role="tablist"></div>
+
+    <div class="toolbar">
+      <span class="cap" id="cap"></span>
+      <div class="chips" id="chips"></div>
+      <span class="status" id="status" aria-live="polite"></span>
+    </div>
+
+    <section class="panel" id="panel" role="tabpanel"></section>
+
+    <section class="trans" aria-labelledby="trans-h">
+      <h3 id="trans-h"></h3>
+      <p id="trans-p"></p>
+      <div class="tgrid" id="tgrid"></div>
+    </section>
+  </section>
+
+  <div class="foot" id="pie"></div>
+</main>
+
+<script>
+/* Los datos de la página (textos, entidades, etapas) están aquí, en formato JSON.
+   Para cambios pequeños puedes editarlos directamente en este archivo desde GitHub. */
+var DATOS = {
+  "intro": "Seis etapas, desde registrar la empresa hasta cerrarla. {n_entidades} entidades distintas intervienen en la ruta. En cada etapa ves qué trámites exigen y qué nivel de gobierno los impone.",
+  "pie": [
+    "Fuentes: CONPES 3956 de 2019 (DNP), Doing Business en Colombia 2017 (Banco Mundial), Decreto 2106 de 2019, Ley 2052 de 2020, CONPES 4208 de 2026 y balances de MinCIT y Función Pública.",
+    "Un asterisco (*) marca funciones o entidades que se asignaron por conocimiento general del sector y que las fuentes revisadas no confirman. Las cifras del cierre de empresas provienen de un trabajo de campo del DNP de 2006 citado en el CONPES 3956."
+  ],
+  "textos": {
+    "aria_ruta": "Etapas de la ruta empresarial",
+    "quien_impone": "Quién impone la carga",
+    "todos": "Todos",
+    "etapa_de": "Etapa {n} de {total}",
+    "n_entidades_etapa": "{n} entidades",
+    "entidades_en_etapa": "{n} entidades en esta etapa",
+    "entidades_filtradas": "{mostradas} de {total} entidades en esta etapa",
+    "titulo_tramites": "Trámites y requisitos",
+    "titulo_entidades": "Entidades que intervienen",
+    "tambien_en": "También en",
+    "ir_a_etapa": "Ir a la etapa {n}: {nombre}",
+    "aviso_no_verificado": "Función no confirmada en las fuentes revisadas",
+    "transversal_titulo": "Quienes fijan y coordinan las reglas",
+    "transversal_texto": "No tramitan una etapa concreta. Crean, autorizan o miden las cargas de todas.",
+    "marco_aria": "Estrategias que contienen la ruta de la empresa",
+    "lidera": "Lidera",
+    "lideran": "Lideran",
+    "ver_ruta": "Ver la ruta ↓",
+    "ruta_cifras": "{etapas} etapas · {entidades} entidades"
+  },
+  "niveles": {
+    "nac": {
+      "nombre": "Nacional"
+    },
+    "dep": {
+      "nombre": "Departamental"
+    },
+    "mun": {
+      "nombre": "Municipal"
+    },
+    "pri": {
+      "nombre": "Privado con función pública"
+    }
+  },
+  "entidades": {
+    "camaras": {
+      "nombre": "Cámaras de Comercio",
+      "sector": "Comercio",
+      "niveles": [
+        "pri"
+      ]
+    },
+    "gobernaciones": {
+      "nombre": "Gobernaciones",
+      "sector": "Hacienda territorial",
+      "niveles": [
+        "dep"
+      ]
+    },
+    "alcaldias": {
+      "nombre": "Alcaldías",
+      "sector": "Gobierno local",
+      "niveles": [
+        "mun"
+      ]
+    },
+    "dian": {
+      "nombre": "DIAN",
+      "sector": "Hacienda",
+      "niveles": [
+        "nac"
+      ]
+    },
+    "mincit": {
+      "nombre": "MinCIT",
+      "sector": "Comercio, Industria y Turismo",
+      "niveles": [
+        "nac"
+      ]
+    },
+    "notarias": {
+      "nombre": "Notarías",
+      "sector": "Notariado",
+      "niveles": [
+        "pri"
+      ]
+    },
+    "segsocial": {
+      "nombre": "EPS, pensiones, ARL, cesantías y cajas de compensación",
+      "sector": "Salud, pensiones y trabajo",
+      "niveles": [
+        "pri"
+      ]
+    },
+    "mintrabajo": {
+      "nombre": "Ministerio del Trabajo",
+      "sector": "Trabajo",
+      "niveles": [
+        "nac"
+      ]
+    },
+    "minsalud": {
+      "nombre": "Ministerio de Salud",
+      "sector": "Salud",
+      "niveles": [
+        "nac"
+      ]
+    },
+    "ugpp": {
+      "nombre": "UGPP",
+      "sector": "Protección social",
+      "niveles": [
+        "nac"
+      ]
+    },
+    "senaicbf": {
+      "nombre": "SENA e ICBF",
+      "sector": "Formación y niñez",
+      "niveles": [
+        "nac"
+      ]
+    },
+    "minhacienda": {
+      "nombre": "Ministerio de Hacienda",
+      "sector": "Hacienda",
+      "niveles": [
+        "nac"
+      ]
+    },
+    "invima": {
+      "nombre": "Invima",
+      "sector": "Salud",
+      "niveles": [
+        "nac"
+      ]
+    },
+    "secsalud": {
+      "nombre": "Secretarías de salud",
+      "sector": "Salud territorial",
+      "niveles": [
+        "dep",
+        "mun"
+      ]
+    },
+    "ambiental": {
+      "nombre": "Autoridades ambientales (CAR; ANLA*, MinAmbiente*)",
+      "corto": "Autoridades ambientales",
+      "sector": "Ambiente",
+      "niveles": [
+        "nac"
+      ]
+    },
+    "ica": {
+      "nombre": "ICA",
+      "sector": "Agricultura",
+      "niveles": [
+        "nac"
+      ]
+    },
+    "ccp": {
+      "nombre": "Colombia Compra Eficiente",
+      "sector": "Contratación pública",
+      "niveles": [
+        "nac"
+      ]
+    },
+    "sic": {
+      "nombre": "Superintendencia de Industria y Comercio",
+      "sector": "Comercio",
+      "niveles": [
+        "nac"
+      ]
+    },
+    "supersoc": {
+      "nombre": "Superintendencia de Sociedades",
+      "sector": "Sociedades",
+      "niveles": [
+        "nac"
+      ]
+    },
+    "congreso": {
+      "nombre": "Congreso de la República",
+      "sector": "Legislativo",
+      "niveles": [
+        "nac"
+      ]
+    },
+    "dnp": {
+      "nombre": "DNP",
+      "sector": "Planeación",
+      "niveles": [
+        "nac"
+      ]
+    },
+    "funcpub": {
+      "nombre": "Función Pública (DAFP)",
+      "sector": "Gestión pública",
+      "niveles": [
+        "nac"
+      ]
+    },
+    "mintic": {
+      "nombre": "MinTIC",
+      "sector": "Tecnologías de la información",
+      "niveles": [
+        "nac"
+      ]
+    },
+    "presidencia": {
+      "nombre": "Presidencia y Secretaría Jurídica",
+      "sector": "Gobierno nacional",
+      "niveles": [
+        "nac"
+      ]
+    },
+    "minjusticia": {
+      "nombre": "Ministerio de Justicia",
+      "sector": "Justicia",
+      "niveles": [
+        "nac"
+      ]
+    },
+    "dane": {
+      "nombre": "DANE",
+      "sector": "Estadística",
+      "niveles": [
+        "nac"
+      ]
+    }
+  },
+  "etapas": [
+    {
+      "id": "registro",
+      "corto": "Registro y apertura",
+      "titulo": "Registro y apertura",
+      "intro": "Existir ante el Estado: registrar la empresa, obtener un NIT y quedar habilitada para abrir.",
+      "cifra": {
+        "grande": "8 trámites · 11 días",
+        "texto": "para abrir una empresa en 2017. En 2008 eran 11 trámites y 40 días. El costo sigue alto: 13,4% del ingreso por habitante, frente a 3,1% en la OCDE.",
+        "fuente": "CONPES 3956 con datos del Banco Mundial (2017)"
+      },
+      "tramites": [
+        {
+          "texto": "Matrícula mercantil y renovación anual",
+          "entidades": [
+            "camaras"
+          ]
+        },
+        {
+          "texto": "Impuesto de registro, entre 0,3% y 0,7% del valor del acto",
+          "entidades": [
+            "gobernaciones"
+          ]
+        },
+        {
+          "texto": "Inscripción en el RUT y asignación del NIT",
+          "entidades": [
+            "dian"
+          ]
+        },
+        {
+          "texto": "Escritura pública de constitución",
+          "entidades": [
+            "notarias"
+          ]
+        },
+        {
+          "texto": "Uso del suelo y condiciones de apertura del establecimiento",
+          "entidades": [
+            "alcaldias"
+          ]
+        },
+        {
+          "texto": "Registro de libros y tarifa por cada establecimiento adicional",
+          "entidades": [
+            "camaras"
+          ]
+        },
+        {
+          "texto": "Creación en línea por la Ventanilla Única Empresarial",
+          "entidades": [
+            "mincit"
+          ]
+        }
+      ],
+      "entidades": [
+        {
+          "id": "camaras",
+          "funcion": "Administran el registro mercantil. Cobran la matrícula y su renovación anual con 68 rangos de tarifa según los activos."
+        },
+        {
+          "id": "gobernaciones",
+          "funcion": "Cobran el impuesto de registro por ordenanza. La mayoría de los departamentos aplica el 0,7%."
+        },
+        {
+          "id": "dian",
+          "funcion": "Inscribe la empresa en el RUT y le asigna el NIT."
+        },
+        {
+          "id": "mincit",
+          "funcion": "Coordina la Ventanilla Única Empresarial y la estrategia de simplificación de trámites empresariales."
+        },
+        {
+          "id": "notarias",
+          "funcion": "Protocolizan la escritura de constitución, un paso que sigue siendo presencial."
+        },
+        {
+          "id": "alcaldias",
+          "funcion": "Definen el uso del suelo y las condiciones de apertura de establecimientos (Ley 1801 de 2016)."
+        }
+      ]
+    },
+    {
+      "id": "laboral",
+      "corto": "Laboral y seguridad social",
+      "titulo": "Insumos laborales y seguridad social",
+      "intro": "Contratar al primer empleado activa afiliaciones y aportes ante varias entidades, cada una con su propio registro.",
+      "cifra": {
+        "grande": "Hasta 60%",
+        "texto": "del tiempo para empezar a operar se va en cinco registros separados: salud, pensión, riesgos laborales, cesantías y caja de compensación.",
+        "fuente": "CONPES 3956 (2019)"
+      },
+      "tramites": [
+        {
+          "texto": "Registro de la empresa y afiliación de cada empleado a una EPS",
+          "entidades": [
+            "segsocial"
+          ]
+        },
+        {
+          "texto": "Afiliación a un fondo de pensiones",
+          "entidades": [
+            "segsocial"
+          ]
+        },
+        {
+          "texto": "Afiliación a una ARL",
+          "entidades": [
+            "segsocial"
+          ]
+        },
+        {
+          "texto": "Afiliación a una administradora de cesantías",
+          "entidades": [
+            "segsocial"
+          ]
+        },
+        {
+          "texto": "Afiliación a una caja de compensación familiar",
+          "entidades": [
+            "segsocial"
+          ]
+        },
+        {
+          "texto": "Pago mensual de aportes y parafiscales por la planilla PILA",
+          "entidades": [
+            "segsocial",
+            "senaicbf"
+          ]
+        }
+      ],
+      "entidades": [
+        {
+          "id": "segsocial",
+          "funcion": "Cada una exige su propio registro de la empresa y la afiliación de cada trabajador."
+        },
+        {
+          "id": "mintrabajo",
+          "funcion": "Lidera la inspección laboral y la Red Nacional de Formalización Laboral."
+        },
+        {
+          "id": "minsalud",
+          "funcion": "Opera el RUAF, que no ha logrado el registro único de seguridad social previsto por la Ley 797 de 2003."
+        },
+        {
+          "id": "ugpp",
+          "funcion": "Controla el pago de aportes a pensiones y parafiscales con cruces de bases de datos."
+        },
+        {
+          "id": "senaicbf",
+          "funcion": "Reciben parafiscales. El SENA además cobra las multas que imponen los inspectores laborales."
+        }
+      ]
+    },
+    {
+      "id": "tributaria",
+      "corto": "Carga tributaria",
+      "titulo": "Carga tributaria",
+      "intro": "Las obligaciones fiscales empiezan al formalizarse y se repiten cada año.",
+      "cifra": {
+        "grande": "32% a 47%",
+        "texto": "de la utilidad bruta es el costo adicional de formalizarse en el primer año, según tres casos de estudio del DNP. Pesan más los costos tributarios y laborales.",
+        "fuente": "CONPES 3956 (2019)"
+      },
+      "tramites": [
+        {
+          "texto": "Declaración y pago de renta, IVA y patrimonio",
+          "entidades": [
+            "dian"
+          ]
+        },
+        {
+          "texto": "Facturación electrónica",
+          "entidades": [
+            "dian"
+          ]
+        },
+        {
+          "texto": "Impuesto de industria y comercio (ICA)",
+          "entidades": [
+            "alcaldias"
+          ]
+        },
+        {
+          "texto": "Impuesto de registro en cada acto registrable",
+          "entidades": [
+            "gobernaciones"
+          ]
+        },
+        {
+          "texto": "Reglas y tarifas que cambian por ley y decreto",
+          "entidades": [
+            "minhacienda"
+          ],
+          "no_verificado": true
+        }
+      ],
+      "entidades": [
+        {
+          "id": "dian",
+          "funcion": "Recibe las declaraciones y pagos de renta, IVA y patrimonio, y administra la facturación electrónica."
+        },
+        {
+          "id": "minhacienda",
+          "funcion": "Define y reglamenta la política tributaria.",
+          "no_verificado": true
+        },
+        {
+          "id": "alcaldias",
+          "funcion": "Cobran el impuesto de industria y comercio."
+        },
+        {
+          "id": "gobernaciones",
+          "funcion": "El impuesto de registro se causa otra vez en reformas estatutarias, compraventas y nombramientos."
+        }
+      ]
+    },
+    {
+      "id": "operacion",
+      "corto": "Operación y permisos",
+      "titulo": "Operación y permisos sectoriales",
+      "intro": "Cada actividad suma permisos propios. Aquí se concentra casi toda la carga.",
+      "cifra": {
+        "grande": "97,6%",
+        "texto": "de los 587 trámites y obligaciones empresariales del orden nacional identificados corresponden a la operación. Solo el 2,2% es de creación. Las CAR quedaron fuera del conteo.",
+        "fuente": "MinCIT y Confecámaras, citado en el CONPES 3956"
+      },
+      "tramites": [
+        {
+          "texto": "Registros y permisos sanitarios",
+          "entidades": [
+            "invima"
+          ]
+        },
+        {
+          "texto": "Permisos de manipulación de alimentos y vigilancia de establecimientos",
+          "entidades": [
+            "secsalud"
+          ]
+        },
+        {
+          "texto": "Licencias y permisos ambientales",
+          "entidades": [
+            "ambiental"
+          ]
+        },
+        {
+          "texto": "Registros y permisos de operación turística",
+          "entidades": [
+            "mincit"
+          ]
+        },
+        {
+          "texto": "Requisitos de comercio exterior y de frontera (VUCE)",
+          "entidades": [
+            "mincit",
+            "dian"
+          ]
+        },
+        {
+          "texto": "Permisos fitosanitarios y zoosanitarios",
+          "entidades": [
+            "ica"
+          ],
+          "no_verificado": true
+        },
+        {
+          "texto": "Registro Único de Proponentes y SECOP para vender al Estado",
+          "entidades": [
+            "camaras",
+            "ccp"
+          ],
+          "no_verificado": true
+        }
+      ],
+      "entidades": [
+        {
+          "id": "invima",
+          "funcion": "Registros y permisos sanitarios. Concentró la mayor frecuencia de quejas en el inventario de DNP y MinCIT."
+        },
+        {
+          "id": "secsalud",
+          "funcion": "Ejecutan la vigilancia sanitaria en el territorio junto con el Invima."
+        },
+        {
+          "id": "ambiental",
+          "funcion": "Licencias y permisos ambientales. Su carga está subdiagnosticada porque las CAR no entraron al inventario."
+        },
+        {
+          "id": "mincit",
+          "funcion": "Registros de operación turística y Ventanilla Única de Comercio Exterior. Turismo es un sector con muchas quejas."
+        },
+        {
+          "id": "dian",
+          "funcion": "Controla los requisitos en frontera. Colombia pasó del puesto 125 al 133 en comercio transfronterizo (Doing Business 2019)."
+        },
+        {
+          "id": "ica",
+          "funcion": "Permisos fitosanitarios y zoosanitarios.",
+          "no_verificado": true
+        },
+        {
+          "id": "ccp",
+          "funcion": "Administra el SECOP, la plataforma de contratación estatal.",
+          "no_verificado": true
+        },
+        {
+          "id": "camaras",
+          "funcion": "Llevan el Registro Único de Proponentes para contratar con el Estado.",
+          "no_verificado": true
+        }
+      ]
+    },
+    {
+      "id": "control",
+      "corto": "Inspección y control",
+      "titulo": "Inspección, vigilancia y control",
+      "intro": "Las autoridades verifican que la empresa cumpla lo que se le exigió en las etapas anteriores.",
+      "cifra": {
+        "grande": "10 a 12",
+        "texto": "ciudades y municipios son la excepción. En el resto el control se hace sin articular a las autoridades y sin garantías de calidad. Donde se articuló con el RUES (Cali), las visitas por empresario bajaron 75%.",
+        "fuente": "CONPES 3956 (2019)"
+      },
+      "tramites": [
+        {
+          "texto": "Visitas para verificar el registro mercantil",
+          "entidades": [
+            "sic"
+          ]
+        },
+        {
+          "texto": "Presentación de estados financieros, con multas hasta 200 SMMLV",
+          "entidades": [
+            "supersoc"
+          ]
+        },
+        {
+          "texto": "Fiscalización de aportes a pensiones y parafiscales",
+          "entidades": [
+            "ugpp"
+          ]
+        },
+        {
+          "texto": "Inspección laboral y acuerdos de formalización",
+          "entidades": [
+            "mintrabajo"
+          ]
+        },
+        {
+          "texto": "Control tributario, aduanero y cambiario",
+          "entidades": [
+            "dian"
+          ]
+        },
+        {
+          "texto": "Inspección sanitaria basada en riesgo",
+          "entidades": [
+            "invima"
+          ]
+        }
+      ],
+      "entidades": [
+        {
+          "id": "sic",
+          "funcion": "Visita comerciantes y sanciona. Entre 2012 y 2017 hizo 1.828 inspecciones y sancionó a 239."
+        },
+        {
+          "id": "supersoc",
+          "funcion": "Vigila a las sociedades comerciales que no supervisa la Superfinanciera."
+        },
+        {
+          "id": "ugpp",
+          "funcion": "Fiscaliza aportes a pensiones y parafiscales."
+        },
+        {
+          "id": "mintrabajo",
+          "funcion": "Inspecciona el trabajo. Entre 2012 y 2017 firmó 285 acuerdos de formalización laboral."
+        },
+        {
+          "id": "dian",
+          "funcion": "Fiscaliza obligaciones tributarias, aduaneras y cambiarias."
+        },
+        {
+          "id": "invima",
+          "funcion": "Aplica la inspección, vigilancia y control sanitario con enfoque de riesgo."
+        }
+      ]
+    },
+    {
+      "id": "cierre",
+      "corto": "Cierre",
+      "titulo": "Cierre de la empresa",
+      "intro": "Salir de la formalidad también cuesta tiempo y dinero.",
+      "cifra": {
+        "grande": "6,5 meses",
+        "texto": "como mínimo, 12 trámites ante 6 entidades y más de $3 millones. Los documentos se piden por duplicado y las bajas son parciales.",
+        "fuente": "Trabajo de campo del DNP (2006), citado en el CONPES 3956"
+      },
+      "tramites": [
+        {
+          "texto": "Renovar la matrícula mercantil para poder cancelarla",
+          "entidades": [
+            "camaras"
+          ]
+        },
+        {
+          "texto": "Cancelar la matrícula y dar de baja en los registros",
+          "entidades": [
+            "camaras",
+            "dian"
+          ]
+        },
+        {
+          "texto": "Obtener el extracto de deudas tributarias",
+          "entidades": [
+            "dian"
+          ]
+        },
+        {
+          "texto": "Disolver y liquidar la sociedad",
+          "entidades": [
+            "supersoc"
+          ],
+          "no_verificado": true
+        },
+        {
+          "texto": "Dar de baja en los sistemas de seguridad social",
+          "entidades": [
+            "segsocial"
+          ],
+          "no_verificado": true
+        }
+      ],
+      "entidades": [
+        {
+          "id": "camaras",
+          "funcion": "Exigen la matrícula renovada para cancelarla. Por eso muchos dejan caducar el registro, que vence a los cinco años."
+        },
+        {
+          "id": "dian",
+          "funcion": "Emite el extracto de deudas tributarias. El CONPES señala restricciones para automatizarlo."
+        },
+        {
+          "id": "segsocial",
+          "funcion": "La baja de la empresa en cada sistema de afiliación.",
+          "no_verificado": true
+        },
+        {
+          "id": "supersoc",
+          "funcion": "Interviene en liquidaciones societarias.",
+          "no_verificado": true
+        }
+      ]
+    }
+  ],
+  "transversales": [
+    {
+      "id": "congreso",
+      "funcion": "Crea trámites y requisitos por ley.",
+      "no_verificado": true
+    },
+    {
+      "id": "dnp",
+      "funcion": "Lidera la mejora regulatoria y el análisis de impacto normativo. Coordina la hoja de ruta 2026-2033 del CONPES 4208."
+    },
+    {
+      "id": "funcpub",
+      "funcion": "Autoriza los trámites, los registra en el SUIT y lidera la política de racionalización."
+    },
+    {
+      "id": "mintic",
+      "funcion": "Opera el Portal Único del Estado y la interoperabilidad entre entidades."
+    },
+    {
+      "id": "presidencia",
+      "funcion": "Impulsó Estado Simple, Colombia Ágil con la Directiva Presidencial 07 de 2018."
+    },
+    {
+      "id": "minjusticia",
+      "funcion": "Participó en la coordinación de Estado Simple, Colombia Ágil."
+    },
+    {
+      "id": "dane",
+      "funcion": "Mide la informalidad con encuestas de micronegocios y prepara el censo económico del CONPES 3956."
+    }
+  ],
+  "marco": [
+    {
+      "etiqueta": "Plan nacional",
+      "titulo": "Plan Nacional de Estandarización y Racionalización de Trámites",
+      "texto": "Marco general que cobija las estrategias de simplificación.",
+      "lidera": [
+        "funcpub"
+      ]
+    },
+    {
+      "etiqueta": "Estrategia transversal",
+      "titulo": "Identificación de trámites",
+      "texto": "Identifica los trámites que existen y que hay que intervenir.",
+      "lidera": [
+        "minjusticia",
+        "dnp"
+      ]
+    },
+    {
+      "etiqueta": "Componente productivo",
+      "titulo": "Ruta de la empresa en Colombia",
+      "texto": "Los trámites que enfrenta una empresa, desde el registro hasta el cierre.",
+      "lidera": [],
+      "destacado": true,
+      "ancla": "ruta"
+    }
+  ]
+};
+
+(function(){
+  var D=DATOS, NIV=D.niveles, E=D.entidades, S=D.etapas, T=D.transversales, U=D.textos;
+  var cur=0, filter='all';
+  var $=function(s){return document.querySelector(s)};
+  var routeEl=$('#route'), panel=$('#panel'), chipsEl=$('#chips'), statusEl=$('#status');
+  var mobile=function(){return window.matchMedia('(max-width:760px)').matches};
+  function fmt(s,o){return s.replace(/\{(\w+)\}/g,function(_,k){return o[k]})}
+  function dot(k){return '<i class="dot" style="--c:var(--lv-'+k+')"></i>'}
+
+  function match(ids){
+    if(filter==='all') return true;
+    return ids.some(function(id){return E[id].niveles.indexOf(filter)>-1});
+  }
+  function nivelHtml(id){
+    return E[id].niveles.map(function(l){return '<span>'+dot(l)+NIV[l].nombre+'</span>'}).join('');
+  }
+  function alsoIn(id,i){
+    var r=[]; S.forEach(function(s,j){ if(j!==i && s.entidades.some(function(x){return x.id===id})) r.push(j) });
+    return r;
+  }
+  function card(id,fn,inf,i,showAlso){
+    var e=E[id], dim=match([id])?'':' dim', also='';
+    if(showAlso){
+      var a=alsoIn(id,i);
+      if(a.length) also='<div class="also">'+U.tambien_en+a.map(function(j){
+        var lbl=fmt(U.ir_a_etapa,{n:j+1,nombre:S[j].corto});
+        return '<button type="button" data-go="'+j+'" aria-label="'+lbl+'" title="'+S[j].corto+'">'+(j+1)+'</button>';
+      }).join('')+'</div>';
+    }
+    return '<article class="card'+dim+'"><div class="n">'+e.nombre+(inf?'<span title="'+U.aviso_no_verificado+'"> *</span>':'')+'</div>'
+      +'<div class="m"><span>'+e.sector+'</span>'+nivelHtml(id)+'</div>'
+      +'<p class="f">'+fn+'</p>'+also+'</article>';
+  }
+
+  function renderRoute(){
+    routeEl.style.setProperty('--n-etapas',S.length);
+    routeEl.setAttribute('aria-label',U.aria_ruta);
+    routeEl.innerHTML=S.map(function(s,i){
+      return '<button type="button" class="step" role="tab" id="tab-'+s.id+'" aria-controls="panel" data-i="'+i+'">'
+        +'<span class="num">'+(i+1)+'</span><span class="txt"><span class="lbl">'+s.corto+'</span>'
+        +'<span class="sub">'+fmt(U.n_entidades_etapa,{n:s.entidades.length})+'</span></span></button>';
+    }).join('');
+  }
+  function updateRoute(){
+    Array.prototype.forEach.call(routeEl.children,function(b,i){
+      b.setAttribute('aria-selected',i===cur?'true':'false');
+      b.tabIndex=i===cur?0:-1;
+      b.classList.toggle('done',i<cur);
+    });
+    panel.setAttribute('aria-labelledby','tab-'+S[cur].id);
+  }
+
+  function renderPanel(){
+    var s=S[cur], prev=S[cur-1], next=S[cur+1];
+    panel.innerHTML=
+      '<div class="cols"><div>'
+      +'<p class="eyebrow">'+fmt(U.etapa_de,{n:cur+1,total:S.length})+'</p>'
+      +'<h3 class="stage">'+s.titulo+'</h3><p class="lead">'+s.intro+'</p>'
+      +'<div class="stat"><div class="big">'+s.cifra.grande+'</div><p>'+s.cifra.texto+'</p><span class="src">'+s.cifra.fuente+'</span></div>'
+      +'<h4 class="h3">'+U.titulo_tramites+'</h4>'
+      +'<ul class="tram">'+s.tramites.map(function(t){
+          var dim=match(t.entidades)?'':' class="dim"';
+          return '<li'+dim+'><div class="t">'+t.texto+(t.no_verificado?' *':'')+'</div><div class="w">'
+            +t.entidades.map(function(id){var e=E[id];return '<span>'+dot(e.niveles[0])+(e.corto||e.nombre)+'</span>'}).join('')+'</div></li>';
+        }).join('')+'</ul>'
+      +'</div><div>'
+      +'<h4 class="h3" style="margin-bottom:12px">'+U.titulo_entidades+'</h4>'
+      +'<div class="ents">'+s.entidades.map(function(x){return card(x.id,x.funcion,x.no_verificado,cur,true)}).join('')+'</div>'
+      +'</div></div>'
+      +'<div class="nav"><button type="button" data-go="'+(cur-1)+'"'+(prev?'':' disabled')+'>'+(prev?'← '+prev.corto:'')+'</button>'
+      +'<button type="button" data-go="'+(cur+1)+'"'+(next?'':' disabled')+'>'+(next?next.corto+' →':'')+'</button></div>';
+    var total=s.entidades.length, shown=s.entidades.filter(function(x){return match([x.id])}).length;
+    statusEl.textContent=filter==='all'?fmt(U.entidades_en_etapa,{n:total}):fmt(U.entidades_filtradas,{mostradas:shown,total:total});
+  }
+
+  function renderChips(){
+    var opts=[['all',U.todos]].concat(Object.keys(NIV).map(function(k){return [k,NIV[k].nombre]}));
+    chipsEl.innerHTML=opts.map(function(o){
+      return '<button type="button" class="chip" data-f="'+o[0]+'" aria-pressed="'+(filter===o[0])+'">'
+        +(o[0]==='all'?'':dot(o[0]))+o[1]+'</button>';
+    }).join('');
+  }
+  function renderTrans(){
+    $('#tgrid').innerHTML=T.map(function(x){return card(x.id,x.funcion,x.no_verificado,-1,false)}).join('');
+  }
+
+  function renderMarco(){
+    var el=$('#marco'), uniq={};
+    el.setAttribute('aria-label',U.marco_aria);
+    S.forEach(function(s){s.entidades.forEach(function(x){uniq[x.id]=1})});
+    el.innerHTML=D.marco.map(function(m,i){
+      var ids=m.lidera||[], der='';
+      if(ids.length){
+        der='<div class="lidera"><span class="cap">'+(ids.length>1?U.lideran:U.lidera)+'</span><div class="whos">'
+          +ids.map(function(id){var e=E[id];return '<span class="who">'+dot(e.niveles[0])+(e.corto||e.nombre)+'</span>'}).join('')
+          +'</div></div>';
+      } else if(m.ancla){
+        der='<div><span class="cnt">'+fmt(U.ruta_cifras,{etapas:S.length,entidades:Object.keys(uniq).length})+'</span>'
+          +'<a class="go" href="#'+m.ancla+'">'+U.ver_ruta+'</a></div>';
+      }
+      return '<li class="esc'+(m.destacado?' on':'')+'" style="--i:'+i+'"><div class="et"><span class="cap">'+m.etiqueta+'</span>'
+        +'<p class="mt">'+m.titulo+'</p><p class="tx">'+m.texto+'</p></div>'+der+'</li>';
+    }).join('');
+  }
+
+  function select(i,opts){
+    if(i<0||i>=S.length) return;
+    cur=i; updateRoute(); renderPanel();
+    if(opts&&opts.scroll&&mobile()) panel.scrollIntoView({behavior:'smooth',block:'start'});
+    else if(opts&&opts.focus) routeEl.children[i].focus();
+  }
+
+  routeEl.addEventListener('click',function(ev){
+    var b=ev.target.closest('.step'); if(!b) return;
+    select(+b.dataset.i,{scroll:true});
+  });
+  routeEl.addEventListener('keydown',function(ev){
+    var d=ev.key==='ArrowRight'||ev.key==='ArrowDown'?1:ev.key==='ArrowLeft'||ev.key==='ArrowUp'?-1:0;
+    if(!d) return; ev.preventDefault();
+    select(Math.max(0,Math.min(S.length-1,cur+d)),{focus:true});
+  });
+  panel.addEventListener('click',function(ev){
+    var b=ev.target.closest('[data-go]'); if(!b||b.disabled) return;
+    select(+b.dataset.go,{scroll:true,focus:true});
+  });
+  chipsEl.addEventListener('click',function(ev){
+    var b=ev.target.closest('.chip'); if(!b) return;
+    filter=b.dataset.f; renderChips(); renderPanel(); renderTrans();
+  });
+
+  var vistas={}; S.forEach(function(s){s.entidades.forEach(function(x){vistas[x.id]=1})});
+  $('#intro').textContent=fmt(D.intro,{n_entidades:Object.keys(vistas).length});
+  $('#cap').textContent=U.quien_impone;
+  $('#trans-h').textContent=U.transversal_titulo;
+  $('#trans-p').textContent=U.transversal_texto;
+  $('#pie').innerHTML=D.pie.map(function(p){return '<p>'+p+'</p>'}).join('');
+
+  renderMarco(); renderRoute(); renderChips(); renderTrans();
+  var h=(location.hash||'').slice(1), start=S.findIndex(function(s){return s.id===h});
+  select(start>-1?start:0);
+})();
+</script>
+</body>
+</html>
