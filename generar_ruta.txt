@@ -1,17 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-Generador de la página «Ruta de la empresa en Colombia».
-
-CÓMO USARLO
------------
-En Google Colab:  pega este archivo completo en una celda, ejecútala y se descarga index.html.
-En tu computador: python generar_ruta.py   (crea index.html en la misma carpeta).
-
-CÓMO EDITARLO
--------------
-Todo lo que se lee en la página está en las secciones 1 a 7 de abajo (textos, colores,
-niveles, entidades, etapas). No necesitas tocar la plantilla HTML del final.
-Los textos aceptan HTML simple: <b>negrita</b>, <a href="https://...">enlace</a>.
 """
 import html
 import json
